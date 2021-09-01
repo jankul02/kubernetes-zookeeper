@@ -79,7 +79,7 @@ HOST=`hostname -s`
 DOMAIN=`hostname -d`
 LOG_LEVEL=INFO
 DATA_DIR="/var/lib/zookeeper/data"
-DATA_LOG_DIR="/var/lib/zookeeper/log"
+DATA_LOG_DIR="/var/lib/zookeeper/data/log"
 LOG_DIR="/var/log/zookeeper"
 CONF_DIR="/opt/zookeeper/conf"
 CLIENT_PORT=2181
@@ -88,11 +88,12 @@ ELECTION_PORT=3888
 TICK_TIME=2000
 INIT_LIMIT=10
 SYNC_LIMIT=5
-HEAP=2G
+HEAP=512M
 MAX_CLIENT_CNXNS=60
 SNAP_RETAIN_COUNT=3
-PURGE_INTERVAL=0
+PURGE_INTERVAL=12
 SERVERS=1
+
 
 function print_usage() {
 echo "\
@@ -183,6 +184,8 @@ function print_servers() {
         echo "server.$i=$NAME-$((i-1)).$DOMAIN:$SERVER_PORT:$ELECTION_PORT"
     done
 }
+
+
 
 function create_config() {
     rm -f $CONFIG_FILE
@@ -312,10 +315,26 @@ if [[ $HOST =~ (.*)-([0-9]+)$ ]]; then
     NAME=${BASH_REMATCH[1]}
     ORD=${BASH_REMATCH[2]}
 else
-    echo "Fialed to parse name and ordinal of Pod"
+    echo "Failed to parse name and ordinal of Pod"
     exit 1
 fi
 
 MY_ID=$((ORD+1))
+
+
+ls -lR /mnt/zk-${ORD}
+CFG_FILE=/mnt/zk-${ORD}/cfg
+if [[ -f "$CFG_FILE" ]]; then
+    source $CFG_FILE
+    echo "zk-${ORD} specific config"
+    echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    cat $CFG_FILE 
+    echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+fi
+echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+echo  ${WELCOME_MESSAGE:- "Hello Hello World from DataProxy"}
+echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+
 
 create_config && create_jvm_props && create_log_props && create_data_dirs && exec zkServer.sh start-foreground
