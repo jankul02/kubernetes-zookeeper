@@ -322,11 +322,22 @@ fi
 MY_ID=$((ORD+1))
 
 
-ls -lR /mnt/zk-${ORD}
-CFG_FILE=/mnt/zk-${ORD}/cfg
+ls -lR /mnt/zk-global
+CFG_FILE_GLOBAL=/mnt/zk-global/cfg
+if [[ -f "$CFG_FILE_GLOBAL" ]]; then
+    source $CFG_FILE_GLOBAL
+    echo "zk-global specific config"
+    echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    cat $CFG_FILE_GLOBAL 
+    echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+fi
+
+
+ls -lR /mnt/zk-global
+CFG_FILE=/mnt/zk-global/${ORD}
 if [[ -f "$CFG_FILE" ]]; then
     source $CFG_FILE
-    echo "zk-${ORD} specific config"
+    echo "${ORD} specific config"
     echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     cat $CFG_FILE 
     echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
