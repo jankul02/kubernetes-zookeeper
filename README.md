@@ -6,6 +6,3 @@ The [makefile](Makefile) contained in the docker directory has three commands.
 - The `push` command will push the image, provided you have correct permissions, 
 to grc.io/containers repository.
 - The `all` command will perform the `build` command.
-
-The [scripts](scripts) directory contains useful utilities for managing the 
-ZooKeeper process in a Kubernetes cluster. 
