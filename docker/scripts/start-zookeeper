@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 #
 
-USER=`whoami`
-HOST=`hostname -s`
-DOMAIN=`hostname -d`
+USER=${ZOOKEEPER_DATAPROXY_USER:-`whoami`}
+HOST=${ZOOKEEPER_DATAPROXY_HOST:-`hostname -s`}
+#DOMAIN=${ZOOKEEPER_DATAPROXY_DOMAIN:-`hostname -d`}
 
-export ZOOKEEPER_CLIENT_PORT="${ZOOKEEPER_CLIENT_PORT:-2181}"
+
+# export ZOOKEEPER_CLIENT_PORT="${ZOOKEEPER_CLIENT_PORT:-2181}"
 SERVER_PORT="${SERVER_PORT:-2888}"
 ELECTION_PORT="${ELECTION_PORT:-3888}"
 export ZOOKEEPER_TICK_TIME="${ZOOKEEPER_TICK_TIME:-2000}"
@@ -14,8 +15,8 @@ export ZOOKEEPER_SYNC_LIMIT="${ZOOKEEPER_SYNC_LIMIT:-5}"
 export ZOOKEEPER_MAX_CLIENT_CNXNS="${ZOOKEEPER_MAX_CLIENT_CNXNS:-60}"
 export ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT="${ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT:-3}"
 export ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL="${ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL:-12}"
-SERVERS="${SERVERS:-2888}"
-export KAFKA_OPTS='-Dzookeeper.4lw.commands.whitelist=*'
+SERVERS="${SERVERS:-3}"
+export KAFKA_OPTS='-Dzookeeper.ssl.quorum.hostnameVerification=false -Dzookeeper.ssl.hostnameVerification=false -Dzookeeper.4lw.commands.whitelist=* -Dzookeeper.electionPortBindRetry=0'
 
 
 function print_usage() {
@@ -66,7 +67,7 @@ fi
 
 
 
-ls -lR /mnt/zk-global
+
 CFG_FILE_GLOBAL=/mnt/zk-global/cfg
 if [[ -f "$CFG_FILE_GLOBAL" ]]; then
     source $CFG_FILE_GLOBAL
@@ -76,7 +77,6 @@ if [[ -f "$CFG_FILE_GLOBAL" ]]; then
     echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 fi
 
-ls -lR /mnt/zk-global
 CFG_FILE=/mnt/zk-global/${ORD}
 if [[ -f "$CFG_FILE" ]]; then
     source $CFG_FILE
@@ -89,18 +89,28 @@ echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 echo  ${WELCOME_MESSAGE:- "Hello Hello World from DataProxy"}
 echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
-export ZOOKEEPER_SERVER_ID=$((ORD+1))
+export ZOOKEEPER_SERVER_ID=${ZOOKEEPER_SERVER_ID:-$((ORD+1))}
 
 
 
 #ZOOKEEPER_SERVERS: localhost:2888:3888;localhost:2888:3888;localhost:2888:3888
+
+
 ZOOKEEPER_SERVERS=
 SEP=
 for (( i=1; i<=$SERVERS; i++ ))
 do
-ZOOKEEPER_SERVERS=${ZOOKEEPER_SERVERS}"$SEP$NAME-$((i-1)).$DOMAIN:$SERVER_PORT:$ELECTION_PORT"
+#if [ $i == $((ORD+1)) ] ; then
+
+#ZOOKEEPER_SERVERS=${ZOOKEEPER_SERVERS}"${SEP}0.0.0.0:$SERVER_PORT:$ELECTION_PORT"
+
+#else
+ZOOKEEPER_SERVERS=${ZOOKEEPER_SERVERS}"$SEP$NAME-$((i-1)).zk-hs.default.svc.cluster.local:$SERVER_PORT:$ELECTION_PORT"
+
+#fi
 SEP=";"
 done
+
 
 
 export ZOOKEEPER_SERVERS
